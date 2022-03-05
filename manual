@@ -1,0 +1,433 @@
+<--- DJANGO --->
+
+# TODO: Passo a passo:
+
+Para rodar o site digite o seguinte no temrinal: python manage.py runserver
+
+Observações:
+    Rodar servidor em outra porta: python manage.py runserver 8888
+    Sair do servidor: Ctrl + C
+    No arquivo settins sete o valor de DEBUG como False para os erros não aparecerem para o usuário final
+
+1. INSTALAÇÃO: pip install django (terminal)
+2. CRIAÇÃO DO PROJETO: django-admin startproject agenda . (terminal) # agenda corresponde ao nome do projeto no Django, o . serve para que não seja criado mais de uma pasta do projeto
+3. CRIAÇÃO DE UM APP (PÁGINA): python manage.py startapp contatos (terminal) # contatos corresponde ao nome do app que se quer criar
+4. REGISTRO DO APP EM SETTINGS: agenda (projeto) -> settings -> INSTALLER_APPS -> acrescente no final: 'contatos.apps.ContatosConfig'
+5. REGISTRO DO APP EM URLS: agenda (projeto) -> urls.py -> em 'from django.urls import path' acrescente 'include' -> from django.urls import path, include
+5. REGISTRO DO APP EM URLS: em urlpatterns, duplique o item e altere para o seguinte: path('contatos/', include('contatos.urls'))
+6. CRIAÇÃO DO ARQUIVO urls no APP: contatos (APP) -> novo arquivo .py -> urls.py
+6. CRIAÇÃO DO ARQUIVO urls no APP: digite: from django.urls import path; from . import views; urlpatterns = [path('', views.index, name='index'),]
+7. CONFIGURAÇÃO EM VIEWS: contatos (APP) -> views.py -> digite: from django.shortcuts import render; def index(request): return render(request, 'contatos/index.html')
+8. CRIAÇÃO DO TEMPLATE DO APP: contatos (APP) -> crie uma pasta templates -> dentro dela crie uma pasta contatos -> dentro dele crie um index.html
+
+
+# TODO: Template html em comum
+1. Vá na pasta principal do projeto
+2. Crie um diretório na raiz principal chamado templates -> crie um html chamado base.html
+3. Vá em settings.py -> procure por TEMPLATES
+4. Em 'DIRS' inclua  o seguinte na lista: [BASE_DIR / 'templates']
+5. É preciso reservar espaços no html principal para utilização pelos apps
+6. Para realização da reserva utilize a seguinte sintaxe -> {%block 'conteudo'%}{endblock%}
+7. Vá no arquivo html do app e no início dele digite o seguinte: {%extends 'base.html'%}
+    Após digite um bloco presente no base.html e dentro coloque o conteúdo desejado:
+    {%block 'titulo'%} Site em Django. {%endblock%}
+    Faça o mesmo para os demais blocos do base.html
+
+
+# TODO: Criação da Página Principal
+1. Crie um novo app (home)
+2. Registro no settings:
+    Importe a views da página principal: from home import views
+    Defina a url com um valor vazio e no caminho coloque views.index
+    Crie a pasta templates/home/index.html e extenda do modelo
+3. Caso se queira também é possível definir a url do app como vazia
+
+# TODO: Criação de pasta filha
+1. Dentro do urls de um app, crie mais de uma urlpattern
+2. Defina o nome da url: path('imagem', views.imagem, name='imagem')
+3. No views crie uma função adicional com o nome da página filha
+4. Na pasta templates do app, crie uma nova pasta e um novo index.html para a página filha
+
+# TODO: Utilização de arquivos estáticos
+Método 1
+    1. No settings.py procure por STATIC_URL
+    2. Abaixo inclua STATICFILES_DIRS = [BASE_DIR / 'templates/static]'
+    3. Dentro da pasta de modelos html (modelo) crie uma pasta com o nome de static
+    4. Inclua os arquivos estáticos dentro da nova pasta
+    5. Vá no base.html e, no topo, inclua: {% load static%}
+    6. Nos links de referência ao css coloque os caminhos entre aspas e entre os delimitadores do Django
+        <link href="vendor/bootstratp/css/bootstratp.min.css" rel="stylesheet">
+        <link href="{% static 'agenda/vendor/bootstratp/css/bootstratp.min.css'%}" rel="stylesheet">
+    7. Dentro dos html filhos também é preciso utiizar o {% load static%}
+
+Método 2
+    1. Dentro do app crie uma pasta static
+    2. Dentro da static crie outra pasta com o mesmo nome do app
+    3. Inclua a pasta com os arquivos estáticos dentro da pasta do item 2
+    4. No topo do arquivo html referenciado inclua {% load static%}
+    5. Coloque os links de css dentro das tags css
+
+# TODO: Carregar url's dinamicamente
+1. Para referenciar uma página como link, defina um name para a view no urls e no settings
+2. Coloque o seguinte no href: {% url 'index' %}
+    Exemplo: <a class="nav-link" href"{% url 'sobre' %}">Home
+
+# TODO: Modularização do html (arquivos parciais)
+1. Crie uma pasta templates na raíz do projeto
+2. Dentro dela crie uma pasta chamada parciais
+3. Crie arquivos html com as partes correspondentes, com um _ na frente
+4. Nos respectivos arquivos html's, exatamente aonde deve estar a parte digite o seguinte:
+    {% include 'parciais/_head.html' %}
+
+# TODO: Incluindo uma variável no html
+1. Crie a variável dentro da função correspondente do html (views)
+2. No return, após o parâmetro do html, acrescente um dicionário com uma string com o nome da variável
+3. E como chave coloque a própria variável
+
+# TODO: Criação dos models
+1. Sempre que forem feitas modificações nos models aplique o comando:
+    python manage.py migrate -> Este comando cria as tabelas no banco de dados
+2. Acesse a pasta de um app e vá na pasta models, e digite o seguinte:
+    from django.contrib.auth.models import User
+
+    class Contato(models.Model): # Cada classe é uma tabela
+        nome = models.CharField(max_length=255, verbose_name='Nome') # O verbose_name define  nome que será exibido no admin para esse campo
+        sobrenome = models.CharField(max_length=255, blank=True) # O parâmetro blank define que o campo é opcional
+        data = models.DateTimeFiels(defaul=timezone.now) # importe from django.utils import timezone -> O parâmetro default retorna a data atual
+        descricao = models.TextField(blank=True)
+        categoria = models.ForeingKey(Categoria, on_delete=models.DO_NOTHING, blank=True, null=True) # Caso a categoria seja apagada nada será feito nos registros vinculados. O parâmetro null=True define que o campo pode ser nulo
+        conteudo = models.TextField() # área de texto grande
+        imagem = models.ImageField(upload_to="image/%Y/%m)
+        email = models.EmailField(on_delete=models.CASCADE) # o models.CASCADE define que se o e-mail for apagado o registro será excluído por completo
+        user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+
+    class Categoria(models.Model):
+        nome = models.CharField(max_length=10)
+        idade = models.IntegerField()
+        trabalhando = models.BooleanField()
+        admissao = models.DateField()
+
+    Para efetivar as alterações execute os seguintes comandos:
+        python manage.py makemigrations
+        python manage.py migrate
+
+# TODO: Área Administrativa
+1. Pode ser acessada digitando /admin após o endereço da página inicial
+2. Para criar um usuário digite o seguinte no terminal:
+    python manage.py createsuperuser
+3. Vá no arquivo admin.py do app em questão e importe as tabelas:
+    from . models import Categoria, Contato
+    admin.site.register(Categoria)
+4. A parte administrativa permite a inclusão de novas categorias
+5. O nome das categorias criadas virão com a representação do objeto. Para alterar, vá em models e dentro da classe digite o seguintes:
+    def __str__(self):
+        return self.nome
+6. Exibir mais campos das tabelas na área administrativa:
+    a. Vá em admin.py
+    b. Adicione uma classe:
+        class ContatoAdmin(admin.ModelAdmin):
+            list_display = ('nome', 'sobrenome', 'telefone')
+    c. Adicione o ContatoAdmin dentro do register:
+        admin.site.register(Contato, ContatoAdmin)
+7. Incluir link para página de cadastro do registro:
+    a. Na mesma classe ContatoAdmin inclua uma lista com os itens que deverão ter link
+        list_display_links = ('id', 'nome', 'sobrenome')
+8. Inclusão de filtro por campo:
+    a. Na mesma classe ContatoAdmin inclua uma lista com os itens que deverão ser exibidos no filtro
+        list_filter = ('categoria')
+9. Definição da quantidade de registros por página:
+    list_per_page = 10
+10. Adição de campos para busca:
+    search_fields = ('nome', 'telefone')
+
+# TODO: Exibindo valores nas views
+1. Na view do app importe a classe correspondent
+    from . models import Contato
+2. Adicione um 3º parâmetro na forma de um dicionário
+3. Em uma variável coloque todos os objetos da tabela e o inclua no dicionário
+    def index(request):
+    contatos = Contato.objects.all()
+        return render(request, 'contatos/index.html', {
+            'contatos': contatos
+        })
+4. Vá na tabela html e mantenha somente um <tr>, pois eles serão buscados dinamicamente
+5. Entre as tags tr da tabela inclua uma tag for do django
+6. Nos campos correspondentes inclua as tags da seguinte forma para capturar o valor: {{ contato.telefone }}
+    {% for contato in contatos %}
+    <tr>
+        <td>{{ contato.telefone }}</td>
+    </tr>
+    {% endfor %}
+
+# TODO: Criando uma página específica para cada registro
+1. Vá no urls do app e crie uma nova url:
+    path('<int: contato_id>', views.ver_contato, name='ver_contato')
+2. Vá em views e crie a view ver_contato
+    def ver_contato(request, contato_id):
+        contato = Contato.objects.get(id=contato_id)
+        return render(request, 'contatos/ver_contato.html', {
+        'contato' : contato
+        }
+3. Crie o html ver_contato.html
+4. Nos campos correspondentes coloque as referências aos campos: {{ contato.nome }}
+5. Substitua o href pela tag correspondente ao registro em questão
+    {% url 'ver_contato' contato.id%}
+6. Colocar data no formato português: {{ contato.data_criacao | date:'d/m/Y'}}
+
+# TODO: Download de arquivos
+1. Inclua um caminho para o download na view do app:
+    path("downloadfile", views.downloadfile, name='downloadfile')
+2. Referencie o caminho no html:
+    <a href="/downloadfile" class="u-btn u-button-style u-btn-1">Exportar</a>
+3. Crie uma view para o download:
+    def downloadfile(request):
+        file = 'api/planilha.xlsx'
+        response = StreamingHttpResponse(open(file, 'rb'), content_type= mimetypes.guess_type(file)[0])
+        response['Contect-Disposition'] = "Attachement; filename=planilha.xlsx"
+        return response
+
+# TODO: Incluindo links externos
+1. Para utilizar links externos inclua o caminho completo, inclusive o http
+
+# TODO: Executando funções com dados informados pelo usuário
+1. Identifique o form no html e após a tag de abertura dele insira o código abaixo:
+    {% csrf_token %}
+2. Certifique-se de que o método do form deve ser do tipo POST
+3. Identifique o name dos inputs do form
+4. Na view que chama o html correspondente crie e utilize os inputs da seguinte forma:
+    def omie(request):
+    validacao = None
+
+    if request.method == 'POST':
+        validacao = request.POST['licenca']
+        resultado = validacao + 31
+        print(resultado)
+
+    return render(request, 'solucoes/omie.html',
+                  {'data_atual': data_atual,
+                   'validacao': validacao})
+
+# TODO: Debug = False
+1. Para Debug = False sete o seguinte:
+    ALLOWED_HOSTS = ['*']
+
+# TODO: Levantando o erro 404 ao invés do 500
+1. No views.py importe: from django.http import Http404
+2. Utilize da seguinte forma:
+    def index(request):
+        try:
+            contato = Contato.objects.get(id=contato_id)
+            return render(request, 'index.html', {'contato': contato})
+        except Contato.DoesNotExist as e:
+            raise Http404()
+
+# TODO: Condicionais (if)
+1. Exemplo de utilização para exibir um contato somente quando o campo mostrar estiver setado:
+    {% for contato in contatos %}
+        {% if contato.mostrar %}
+            <tr>
+                <td>{{ contato.nome }}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+
+# TODO: Paginação
+1. Faça a seguinte importação no view: from django.core.paginator import Paginator
+2. def index(request):
+    contatos = Contato.objects.all()
+    paginator = Paginator(contatos, 10)  # Define o limite de 10 contatos por página
+    page = request.GET.get('page')
+    contatos = paginator.get_page(page)
+
+3. Inclua no html a divisão por páginas
+4. Mantenha somente um número de paginação e coloque as <li> dentro de um {% for %} da seguinte forma:
+    {% for contato in contatos.paginator.num_page %}
+        {% if contatos.number == pagina %} # Marca a página atual
+        <li class=''><a class='page-item active' href='?page={{ pagina }}'{{ pagina }}</a></li>
+        {% else %}
+        <li class=''><a class='page-item' href='?page={{ pagina }}'{{ pagina }}</a></li>
+    {% endfor %}
+
+# TODO: Arquivos estáticos não carregando
+1. Coloque a variável DEBUG como True, depois retorne para False
+
+# TODO: Ordenação de campos
+1. Em:
+        def index(request):
+            contatos = Contato.objects.all()
+    Altere para:
+        def index(request):
+            contatos = Contato.objects.order_by('nome') # Todos os campos serão exibidos ordenados pelo nome
+
+            # O ordenamento padrão é em ordem crescente. Para colocar em ordem decrescente coloque -nome
+
+# TODO: Filtrando valores na view
+1. def index(request):
+            contatos = Contato.objects.order_by('nome').filter(mostrar = True)
+
+# TODO: Adicionando campo de pesquisa
+1. Adicione um formulário de busca no html
+2. No action do formulário chame a url da view de busca
+3. Altere o name do input para o nome desejado (exemplo: 'termo')
+4. Para que o termo digitado não seja apagado ao fazer uma busca, coloque no value o seguinte:
+    value= "{{ request.GET.termo }}"
+5. def busca(request): # a função da busca e html são iguais à principal, mas com filtro
+        termo = request.GET.get('termo') # captura do valor digitado pelo usuário
+        contatos = Contato.objects.order_by('nome').filter(nome=termo)
+                # Para localizar nomes que tenham parte do termo digitado:
+                    ...filter(nome__icontains=termo)
+
+                # Para consultas compostas (dois ou mais campos)
+                    from django.db.models import Q
+                        # Procura pelo parâmetro digitado no nome ou no sobrenome e quando mostrar for True
+                        ...filter(Q(nome__icontains=termo) | Q(sobrenome__icontains=termo), mostrar= True)
+
+                # Para procurar nome e sobrenome ao mesmo tempo
+                    from django.db.models import Q, Value
+                    from django.db.models.functios import Concat
+                        campos = Concat('nome', Value(' '), sobrenome')
+
+                        contatos = Contato.objects.annotate(nome_completo = campos).filter(
+                            nome_completo__icontains=termo)
+
+                # Procurar por nome, sobrenome e telefone
+                    contatos = Contato.objects.annotate(nome_completo = campos).filter(
+                            Q(nome_completo__icontains=termo) | Q(telefone__icontains=termo))
+
+        paginator = Paginator(contatos, 10)
+        page = request.GET.get('page')
+        contatos = paginator.get_page(page)
+
+# TODO: Utilizando mídias no DB do Django
+1. No urls do projeto faça as seguintes importações:
+    from django.conf import settings
+    from django.conf.urls.static import static
+
+2. No url_pattern faça a seguinte alteração:
+     url_pattern = [
+        path('admin/', admin.site.urls),
+                    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+3. No settings inclua o seguinte no final do arquivo:
+    MEDIA_ROOT = [BASE_DIR / 'media']
+    MEDIA_URL = 'media/'
+
+4. Inclua um campo de imagem no models
+    class Contato(models.Model):
+        foto = models.ImageField(blank=True, upload_to='fotos/%Y/%m/%d') # o upload_to cria uma pasta por dia de fotos
+
+5. Faça as migrações, inclua a tag no html e no href referencie a imagem da seguinte forma:
+    {% if contato.foto %}
+        <img src="{{ contato.foto.url }}">
+    {% endif %}
+
+# TODO: Mensagens com Django
+1. Vem instalado em INSTALLED_APPS = ['django.contrib.messages']
+2. Vá no final do settings e inclua o seguinte:
+    from django.contrib.messages import constants
+    MESSAGE_TAGS = {
+        constants.ERROR: 'alert-erros',
+        constants.WARNING: 'alert-warning',
+        constants.DEBUG: 'alert-info',
+        constants.SUCESS: 'alert-sucess',
+        constants.INFO: 'alert-info',
+    }
+
+3. Vá na view e importe o seguinte:
+    from django.contrib import messages
+
+    def index(request):
+        messages.add_message(request, messages.ERROR, 'Ocorreu um erro')
+
+4. Inclua o seguinte no html:
+    {% if messages %}
+        <br>
+        {% for message in messages %}
+            <div class="alert {{ message.tags }}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+5. Pode-se reaproveitar esse código colocando o mesmo nos parciais
+
+# TODO: Redirecionar para outra página
+1. Utilize a seguinte codificação
+    from.django.shortcuts import redirect
+
+    def index(request):
+        ...
+        if termo is not None:
+            return redirect('sobre') # nome da view de redirecionamento
+
+# TODO: Excluindo exibição de uma parte do html
+1. Na parte do html que se deseja ocultar inclua o seguinte:
+    {% if 'accounts' not in request.path %} # Se o app accounts não estiver ativo exiba o seguinte
+        ...
+    {% endif %}
+
+# TODO: Criação de sistema de login
+1. Crie um novo app (exemplo de nome: accounts)
+2. No urls no app crie várias urls (index_login (terá a url vazia), login (encaminhará para a mesma url do index_login),
+    logout, cadastro, dashboards)
+3. Crie as views e os html's
+4. No formulário do html coloque o method="POST" e action="{% url 'cadastro' %} # Cadastro é a tela de cadstro de usuário
+5. Monte a view do formulário de cadastro:
+    def cadastro(request):
+        if request.method != 'POST':  # se o formuário não enviar nada simplesmente renderize o formulário
+            return render(request, 'accounts/cadastro.html')
+        nome = request.POST('nome')  # Capture os valores digitados pelo usuário
+        email = request.POST('email')
+
+        # Faça as validações necessárias conforme a necessidade
+        # Depois é preciso dar um return para que o código não continue a ser executado
+
+# TODO: Formulários para models
+1. Faça a seguinte importação no models:
+    from django import forms
+
+2. Digite o seguinte código:
+    class FormContato(forms.ModelForm):
+        class Meta:
+            model = Contato
+            exclude = ()
+
+3. Vá na view e importe o formulário
+4. Inclua o formulário dentro do dicionário da view
+5. Vá no formulário html (certifique-se de que o method é POST e o action a url da view)
+6. Apague o contéudo, inclua uma table e dentro o form ({{ form }})
+7. Acima da tabela inclua o token crsf: {% csrf_token %}
+8. O botão de enviar precisa ser criado manualmente:
+    <tr>
+        <td colspan="2">
+            <button type="submit" class"btn"> Enviar</button>
+        </td>
+    </tr>
+9. Na view faça o seguinte:
+    def contato(request):
+        # Se o método não for POST simplesmente renderize o site
+        if request.method != 'POST':
+            form = FormContato()
+            return render(request, 'contato.html', {'form': form})
+
+        form = FormContato(request.POST)
+
+        if form.is_valid():
+            form.save()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
