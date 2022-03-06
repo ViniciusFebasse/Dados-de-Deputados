@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class Deputados:
     def __init__(self):
-        plt.rcParams["figure.figsize"] = (2, 2)
+        plt.rcParams["figure.figsize"] = (5,5)
         self.lista = []
 
     def requisicao(self):

@@ -14,8 +14,8 @@
 }
 
 .u-section-1 .u-image-1 {
-  width: 570px;
-  height: 760px;
+  width: 500px;
+  height: 250px;
   margin: 29px auto 0;
 }
 
@@ -26,8 +26,8 @@
 }
 
 .u-section-1 .u-image-2 {
-  width: 570px;
-  height: 760px;
+  width: 500px;
+  height: 250px;
   text-align: start;
   margin: 29px auto 0 273px;
 }
@@ -44,13 +44,13 @@
   }
 
   .u-section-1 .u-image-1 {
-    width: 540px;
-    height: 720px;
+    width: 500px;
+    height: 250px;
   }
 
   .u-section-1 .u-image-2 {
-    width: 540px;
-    height: 720px;
+    width: 500px;
+    height: 250px;
     margin-left: 0;
   }
 }
@@ -61,12 +61,12 @@
   }
 
   .u-section-1 .u-image-1 {
-    width: 340px;
-    height: 453px;
+    width: 500px;
+    height: 250px;
   }
 
   .u-section-1 .u-image-2 {
-    width: 340px;
-    height: 453px;
+    width: 500px;
+    height: 250px;
   }
 }
